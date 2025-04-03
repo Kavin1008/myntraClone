@@ -5,15 +5,39 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from '../screens/products/HomeScreen';
 import Profile from '../screens/profile/Profile';
+import OtpVerification from '../components/OtpVerification';
+import Wishlist from '../components/Wishlist';
+import Signup from '../components/Signup';
+import ProtectedRoute from './ProtectedRoute';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
+
+const ProfileStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false, animationTypeForReplace: 'push' }}>
+      <Stack.Screen name="ProfileMain" component={Profile} />
+      <Stack.Screen name="OtpVerification" component={OtpVerification} />
+      <Stack.Screen name='Signup' component={Signup} options={{presentation:'modal'}}/>
+      <Stack.Screen 
+          name="wishlist" 
+          options={{ headerShown: false }}
+        >
+          {() => (
+            <ProtectedRoute>
+              <Wishlist />
+            </ProtectedRoute>
+          )}
+        </Stack.Screen>
+    </Stack.Navigator>
+  );
+}
 const HomeStack = () => {
   return (
-    <Stack.Navigator initialRouteName='Profile' screenOptions={{ headerShown: false, animationTypeForReplace: 'push' }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, animationTypeForReplace: 'push' }}>
       <Stack.Screen name="HomeMain" component={HomeScreen} />
-      <Stack.Screen name="Profile" component={Profile} />
+      <Stack.Screen name="Profile" component={ProfileStack} />
     </Stack.Navigator>
   );
 };

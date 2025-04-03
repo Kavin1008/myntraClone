@@ -1,14 +1,14 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 
-const ProtectedRoutes = () => {
+const Wishlist = () => {
   return (
     <View>
-      <Text>ProtectedRoutes</Text>
+      <Text>Wishlist</Text>
     </View>
   )
 }
 
-export default ProtectedRoutes
+export default Wishlist
 
 const styles = StyleSheet.create({})

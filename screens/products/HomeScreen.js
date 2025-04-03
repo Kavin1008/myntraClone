@@ -25,18 +25,16 @@ const cards = ["Fashion", "Beauty", "Home", "Footwear", "Accessories"].map((labe
   label,
 }));
 
+
 const HomeScreen = ({ navigation }) => {
   const [isAddLocationModalOpen, setIsAddLocationModalOpen] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
-
-  console.log({ Carousel, CardSlider, SearchBar, ChipBar, ProductsListHorizontal, AddLocationModal, FontAwesome5, Ionicons, img });
 
   const toggleLocationModal = useCallback(() => {
     setIsAddLocationModalOpen((prev) => !prev);
   }, []);
 
   const handleProfileNavigate = i => {
-    console.log(i)
     switch (i) {
       case 0:
         break;

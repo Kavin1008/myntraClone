@@ -1,4 +1,4 @@
-import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+import { getAuth, onAuthStateChanged, signOut } from "@react-native-firebase/auth";
 import { useEffect } from "react";
 import { create } from "zustand";
 
