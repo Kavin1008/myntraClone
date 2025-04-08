@@ -1,12 +1,13 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { View, Text, TextInput, Button, StyleSheet, ActivityIndicator } from "react-native";
-import auth from "@react-native-firebase/auth";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import Ionicon from "react-native-vector-icons/Ionicons";
 import UserStore from "../zustand/UserStore";
 
 export default function OtpVerification() {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
   const [message, setMessage] = useState("");
   const otpInputRef = useRef(null);
   const setUser = UserStore((state) => state.setUser);
@@ -14,48 +15,62 @@ export default function OtpVerification() {
   const route = useRoute();
   const { confirmation, phoneNumber } = route.params;
 
-  const confirmCode = async () => {
+  const confirmCode = async (inputCode) => {
     if (!confirmation) {
-      setMessage("Please request a new OTP.");
+      setError("Please request a new OTP.");
       return;
     }
 
     setLoading(true);
     try {
-      const result = await confirmation.confirm(code);
+      const result = await confirmation.confirm(inputCode);
       setMessage("Phone authentication successful!");
       setUser({
         uid: result.user.uid,
         phoneNumber: result.user.phoneNumber,
       });
 
-      navigation.navigate("ProfileMain"); 
+      navigation.navigate("ProfileMain");
     } catch (error) {
       console.error("Invalid code:", error);
-      setMessage("Invalid OTP. Try again.");
+      setError("Invalid OTP. Try again.");
     }
     setLoading(false);
   };
 
+  const handleTextChange = (text) => {
+    const cleaned = text.replace(/[^0-9]/g, "").slice(0, 6);
+    setCode(cleaned);
+
+    if (cleaned.length === 6) {
+      otpInputRef.current.blur();
+      confirmCode(cleaned);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Verify OTP</Text>
-      <Text style={styles.subtitle}>Enter the OTP sent to {phoneNumber}</Text>
+      <View style={styles.header}>
+        <Ionicon name='arrow-back-sharp' size={24} onPress={() => navigation.goBack()} />
+        <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Enter OTP</Text>
+      </View>
+      <View style={styles.body}>
+        <Text style={styles.title}>Verify with OTP</Text>
+        <Text style={styles.subtitle}>Sent via SMS to {phoneNumber}</Text>
 
-      <TextInput
-        ref={otpInputRef}
-        placeholder="123456"
-        value={code}
-        onChangeText={(text) => setCode(text.replace(/[^0-9]/g, "").slice(0, 6))}
-        keyboardType="number-pad"
-        style={styles.input}
-        maxLength={6}
-      />
+        <TextInput
+          ref={otpInputRef}
+          placeholder="123456"
+          value={code}
+          onChangeText={(text) => handleTextChange(text)}
+          keyboardType="number-pad"
+          style={[styles.input, error && styles.inputError]}
+          maxLength={6}
+        />
+        {error ? <Text style={styles.message}>{message}</Text> : null}
 
-      <Button title="Verify OTP" onPress={confirmCode} disabled={loading} />
-
-      {loading && <ActivityIndicator size="large" color="blue" style={styles.loader} />}
-      {message ? <Text style={styles.message}>{message}</Text> : null}
+        {loading && <ActivityIndicator size="large" color="blue" style={styles.loader} />}
+      </View>
     </View>
   );
 }
@@ -63,17 +78,25 @@ export default function OtpVerification() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 20,
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
+    padding: 10
+  },
+  header: {
+    flexDirection: "row",
+    marginVertical: 50,
+    gap: 20,
+  },
+  body: {
+    paddingHorizontal: 30,
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
     marginBottom: 10,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 12,
     color: "gray",
     marginBottom: 20,
   },
@@ -85,11 +108,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     textAlign: "center",
     fontSize: 18,
-    marginBottom: 20,
   },
   message: {
-    marginTop: 10,
-    fontSize: 16,
+    fontSize: 12,
     color: "red",
+    marginTop: 10
   },
+  inputError: {
+    borderColor: "red",
+  },  
 });

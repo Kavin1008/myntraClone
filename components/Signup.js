@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TextInput, Button, StyleSheet, Image } from "react-native";
+import { View, Text, TextInput, Button, StyleSheet, Image, TouchableOpacity } from "react-native";
 import auth from "@react-native-firebase/auth";
 import { useNavigation } from "@react-navigation/native";
 import UserStore from "../zustand/UserStore";
@@ -11,6 +11,7 @@ export default function Signup({ setSignInPopUp, offerBanner }) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
+  console.log(navigation)
 
   const validatePhoneNumber = (number) => {
     return /^\+\d{1,3}\d{7,15}$/.test(number);
@@ -18,14 +19,14 @@ export default function Signup({ setSignInPopUp, offerBanner }) {
 
   const signInWithPhoneNumberHandler = async () => {
     if (!validatePhoneNumber(phoneNumber)) {
-      setMessage("Invalid phone number format.");
+      setMessage("Please enter a valid phone number.");
       return;
     }
 
     setLoading(true);
     try {
       const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
-      
+
       setSignInPopUp(false);
       navigation.navigate("OtpVerification", { confirmation, phoneNumber });
 
@@ -51,19 +52,26 @@ export default function Signup({ setSignInPopUp, offerBanner }) {
 
       <View style={styles.body}>
         <Text style={styles.label}>
-          <Text style={{ fontWeight: 'bold' }}>Login</Text> <Text style={{ fontSize: 14 }}>or</Text> <Text style={{ fontWeight: 'bold' }}>Signup</Text>
+          <Text style={{ fontWeight: 'bold' }}>Login</Text> <Text style={{ fontSize: 14 }}>  or  </Text> <Text style={{ fontWeight: 'bold' }}>Signup</Text>
         </Text>
         <TextInput
           placeholder="+1 650-555-3434"
           value={phoneNumber}
           onChangeText={setPhoneNumber}
           keyboardType="phone-pad"
-          style={styles.input}
+          style={[styles.input, message && styles.errorMessage]}
+          autoFocus={true}
         />
-        <Button title="Send OTP" onPress={signInWithPhoneNumberHandler} disabled={loading} />
+              {message ? <Text style={styles.message}>{message}</Text> : null}
+        <Text style={styles.description}>By continuing, you agree that you are above 18 years of age, and you agree to Myntra's<Text style={styles.linkText}> Terms of Use</Text > and <Text style={styles.linkText}>Privacy Policy</Text></Text>
+        <TouchableOpacity onPress={signInWithPhoneNumberHandler} style={styles.loginButton}>
+          <Text style={{ color: "white", fontWeight: "bold", fontSize: 12 }} >
+            Login using OTP
+          </Text>
+        </TouchableOpacity>
+        <Text style={styles.description}>Having trouble logging in? <Text style={styles.linkText}>Get help</Text></Text>
       </View>
 
-      {message ? <Text style={styles.message}>{message}</Text> : null}
     </View>
   );
 }
@@ -105,18 +113,42 @@ const styles = StyleSheet.create({
     height: 50,
     borderColor: "#ccc",
     borderWidth: 1,
-    marginBottom: 10,
     paddingHorizontal: 10,
     backgroundColor: "#fff",
+    borderRadius:2
+  },
+  loginButton: {
+    width: "100%",
+    height: "15%",
+    backgroundColor: "#ff406c",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 2
   },
   label: {
     fontSize: 18,
-    marginBottom: 10,
     alignItems: "center",
   },
   message: {
-    marginTop: 20,
-    fontSize: 16,
-    color: "green",
+    fontSize: 12,
+    color: "red",
   },
+  body: {
+    width: "100%",
+    flex: 1,
+    paddingHorizontal: 30,
+    rowGap: 20
+  },
+  description: {
+    color: '#666666',
+    fontSize:13
+  },
+  linkText: {
+    color: '#ff406c',
+    fontWeight: 'bold'
+  },
+  errorMessage: {
+    borderColor: "red",
+    borderWidth: 1
+  }
 });

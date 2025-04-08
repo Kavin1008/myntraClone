@@ -1,17 +1,42 @@
-import { Modal, Platform, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Platform, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
-import Signup from '../../components/Signup'
-import { useState } from 'react'
 import UserStore from '../../zustand/UserStore'
 import auth from '@react-native-firebase/auth'
+import useModalStore from '../../zustand/ModalStore';
+import useRouteStore from '../../zustand/RouteStore';
+import { useEffect } from 'react';
 
-const Profile = ({navigation}) => {
 
-    const [signInPopUp, setSignInPopUp] = useState(false)
+const ProfileOption = ({ item, onPress, hasBorder }) => (
+    <TouchableOpacity
+        onPress={onPress}
+        style={[
+            styles.profileBodyItemsContainer,
+            hasBorder && styles.profileBodyItemBorder
+        ]}
+    >
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Ionicons name={item.icon} style={styles.subTitleColor} size={20} />
+            <View style={styles.profileBodyItem}>
+                <Text style={styles.title}>{item.title}</Text>
+                {item.subTitle && (
+                    <Text style={[styles.subTitle, styles.subTitleColor]}>{item.subTitle}</Text>
+                )}
+            </View>
+        </View>
+        <Ionicons name="chevron-forward" style={styles.subTitleColor} size={12} />
+    </TouchableOpacity>
+);
+
+const Profile = ({ navigation }) => {
+
     const user = UserStore((state) => state.user)
     const setUser = UserStore((state) => state.setUser)
-    console.log(user);
-    
+    const { openModal } = useModalStore();
+
+    useEffect(() => {
+        console.log("User Info:", user);
+      }, [user]);      
 
     const profileBodyItems = [{
         icon: "logo-dropbox",
@@ -34,14 +59,9 @@ const Profile = ({navigation}) => {
         icon: "qr-code-outline",
         title: "Scan for Coupon",
     },]
- 
-    const handleBack = () => {
-        navigation.goBack();
-    }
-
-    const handleSignIn = () => {      
-        console.log(signInPopUp);
-        setSignInPopUp(true)
+    
+    const handleSignIn = () => {
+        openModal();
     }
 
     const handleSignOut = () => {
@@ -51,11 +71,7 @@ const Profile = ({navigation}) => {
 
 
     return (
-        <SafeAreaView style={styles.androidSafeArea}>
-            <View style={styles.profileHeader}>
-                <Ionicons name='arrow-back-sharp' onPress={handleBack} size={24} />
-                <Text style={{ fontWeight: "bold", color: "gray" }}>Profile</Text>
-            </View>
+        <View>
             <ScrollView style={styles.profileBody}>
                 <View style={styles.userDetails}>
                     <View style={styles.imageHolder}>
@@ -73,27 +89,22 @@ const Profile = ({navigation}) => {
                 <View style={styles.divider} />
 
                 <View style={{ width: "100%" }}>
-                    {profileBodyItems.map((item, index) => {
-                        return (
-                            <TouchableOpacity
-                                key={index}
-                                onPress={() => navigation.navigate(item.title.toLowerCase())}
-                                style={[
-                                    styles.profileBodyItemsContainer,
-                                    index !== profileBodyItems.length - 1 && styles.profileBodyItemBorder,
-                                ]}
-                            >
-                                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                                    <Ionicons name={item.icon} style={styles.subTitleColor} size={20} />
-                                    <View style={styles.profileBodyItem}>
-                                        <Text style={styles.title}>{item.title}</Text>
-                                        <Text style={[styles.subTitle, styles.subTitleColor]}>{item.subTitle}</Text>
-                                    </View>
-                                </View>
-                                <Ionicons name="chevron-forward" style={styles.subTitleColor} size={12} />
-                            </TouchableOpacity>
-                        );
-                    })}
+                    {profileBodyItems.map((item, index) => (
+                        <ProfileOption
+                            key={index}
+                            item={item}
+                            hasBorder={index !== profileBodyItems.length - 1}
+                            onPress={() => {
+                                if (!user) {
+                                    useRouteStore.getState().setRequestedRoute(item.title.toLowerCase(), {});
+                                    openModal();
+                                } else {
+                                    navigation.navigate(item.title.toLowerCase());
+                                }
+                            }}
+                        />
+                    ))}
+
                 </View>
 
                 <View style={styles.divider} />
@@ -107,7 +118,7 @@ const Profile = ({navigation}) => {
                                     styles.profileBodyItemsContainer,
                                     index !== profileBodyCouponItem.length - 1 && styles.profileBodyItemBorder,
                                 ]}
-                                onPress={handleSignOut}                                                                                                                                             
+                                onPress={handleSignOut}
                             >
                                 <View style={{ flexDirection: "row", alignItems: "center" }}>
                                     <Ionicons name={item.icon} style={styles.subTitleColor} size={20} />
@@ -124,41 +135,13 @@ const Profile = ({navigation}) => {
                 <View style={styles.divider} />
 
             </ScrollView>
-
-            <Modal animationType="slide" transparent={true} visible={signInPopUp} >
-                <TouchableOpacity
-                    style={styles.modalOverlay}
-                    activeOpacity={1}
-                    onPress={() => setSignInPopUp(false)}
-                >
-                    <View style={styles.modalContainer}>
-                        <Signup setSignInPopUp={setSignInPopUp}/>
-                    </View>
-                </TouchableOpacity>
-            </Modal>
-
-
-        </SafeAreaView>
+            </View>
     )
 }
 
 export default Profile
 
 const styles = StyleSheet.create({
-    androidSafeArea: {
-        flex: 1,
-        backgroundColor: "white",
-        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
-        width: "100%"
-    },
-    profileHeader: {
-        height: "7%",
-        backgroundColor: "white",
-        flexDirection: "row",
-        padding: 15,
-        gap: 15,
-        alignItems: "center"
-    },
     profileBody: {
         backgroundColor: "white",
         width: "100%"
@@ -240,10 +223,9 @@ const styles = StyleSheet.create({
         width: "100%",
         backgroundColor: "white",
         borderTopRightRadius: 30,
-        borderTopLeftRadius:30,
+        borderTopLeftRadius: 30,
         elevation: 5,
-        minHeight: 300, 
-        justifyContent: "flex-end"  
+        minHeight: 400,
+        justifyContent: "flex-end"
     },
-
 });

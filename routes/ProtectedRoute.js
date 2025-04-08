@@ -1,32 +1,45 @@
-import { useEffect } from "react";
-import { View, ActivityIndicator } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import UserStore, { useAuthListener } from "../zustand/UserStore"; 
+import { useEffect, useState } from "react";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import UserStore, { useAuthListener } from "../zustand/UserStore";
+import useModalStore from "../zustand/ModalStore";
+import useRouteStore from "../zustand/RouteStore";
 
 const ProtectedRoute = ({ children }) => {
-  useAuthListener(); 
+  useAuthListener();
 
-  const { isAuthenticated } = UserStore(); 
+  const { isAuthenticated } = UserStore();
+  const { openModal } = useModalStore();
+  const { setRequestedRoute, requestedRoute, clearRequestedRoute } = useRouteStore();
+
+
   const navigation = useNavigation();
+  const route = useRoute();
 
-  console.log(isAuthenticated);
-  
+  const [shouldRender, setShouldRender] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigation.replace("Signup"); 
-    }
-  }, [isAuthenticated, navigation]);
 
-  if (!isAuthenticated) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="blue" />
-      </View>
-    ); 
+    console.log(route)
+
+    if (!isAuthenticated) {
+      setRequestedRoute(route.name, route.params);
+      openModal(); 
+      setShouldRender(false);
+    } else {
+      setShouldRender(true);
+
+      if (requestedRoute?.routeName && route.name !== requestedRoute.routeName) {
+        navigation.replace(requestedRoute.routeName, requestedRoute.params || {});
+        clearRequestedRoute();
+      }
+    }
+  }, [isAuthenticated]);
+
+  if (!shouldRender) {
+    return null;
   }
 
-  return children; 
+  return children;
 };
 
 export default ProtectedRoute;
