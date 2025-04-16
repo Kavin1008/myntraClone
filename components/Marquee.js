@@ -2,6 +2,7 @@ import {Dimensions, Image, StyleSheet, Text, View} from 'react-native';
 import React, {useState} from 'react';
 import {Marquee} from '@animatereactnative/marquee';
 import Animated, {
+    Easing,
   FadeIn,
   FadeInUp,
   FadeOut,
@@ -80,7 +81,9 @@ const MarqueePage = () => {
           style={{flexDirection: 'row', gap: _spacing}}
           entering={FadeInUp.delay(500)
             .duration(1000)
-            .easing(Easing.elastic(0.9))}>
+            .easing(Easing.elastic(0.9)).withInitialValues({
+                transform: [{translateY: -_itemHeight / 2}],
+            })}>
           {images.map((imgUrl, index) => (
             <Item key={`image-${index}`} imgUrl={imgUrl} index={index} />
           ))}
@@ -90,7 +93,7 @@ const MarqueePage = () => {
         key={'random'}
         initialEnteringDelay={1000}
         duration={500}
-        stagger={500}
+        stagger={100}
         style={{flex: 0.5, justifyContent: 'center', alignItems: 'center'}}>
         <Text style={{color: 'white', opacity: 0.6, fontWeight: '500'}}>
           Welcome to

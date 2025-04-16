@@ -32,11 +32,7 @@ const Profile = ({ navigation }) => {
 
     const user = UserStore((state) => state.user)
     const setUser = UserStore((state) => state.setUser)
-    const { openModal } = useModalStore();
-
-    useEffect(() => {
-        console.log("User Info:", user);
-      }, [user]);      
+    const { openModal } = useModalStore();  
 
     const profileBodyItems = [{
         icon: "logo-dropbox",

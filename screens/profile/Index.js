@@ -1,14 +1,14 @@
 import { Platform, SafeAreaView, StatusBar, StyleSheet, Text, View } from 'react-native'
 import React from 'react'
-import UserStore from '../../zustand/UserStore'
+import UserStore, { useAuthListener } from '../../zustand/UserStore'
 import Profile from './Profile'
 import Ionicons from'react-native-vector-icons/Ionicons'
 import LoggedInProfile from './LoggedInProfile'
 
 const Index = ({navigation}) => {
-
+    useAuthListener()
     const user = UserStore((state) => state.user)
-
+    console.log(user)
     const handleBack = () => {
         navigation.goBack();
     }
