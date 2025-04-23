@@ -94,6 +94,7 @@ const handleSubmit = async () => {
       onRequestClose={() => setIsAddLocationModalOpen(false)}
       animationType="slide"
       transparent
+    
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.modalOverlay}>
@@ -128,7 +129,7 @@ const handleSubmit = async () => {
 
             <TextInput
               style={styles.input}
-              placeholder="Landmark"
+              placeholder="Address"
               value={landmark}
               placeholderTextColor={'#222'}
               onChangeText={setLandmark}

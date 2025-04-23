@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useMemo} from 'react';
 import {
   View,
   Text,
@@ -6,13 +6,99 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Pressable,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import useModalStore from '../zustand/ModalStore';
 import useCartStore from '../zustand/CartStore';
 import UserStore from '../zustand/UserStore';
+import useWishlistStore from '../zustand/WishlistStore';
+import {Screen} from 'react-native-screens';
 
 const ProductDetail = ({route, navigation}) => {
+  const {id} = route.params;
+
+  const [product, setProduct] = useState(route.params || null);
+  const [loading, setLoading] = useState(!route.params?.title);
+
+  const {user, isAuthenticated} = UserStore();
+  const openModal = useModalStore(state => state.openModal);
+  const addToCart = useCartStore(state => state.addToCart);
+  const {wishlistItems, addToWishlist, removeFromWishlist} = useWishlistStore();
+
+  const [showAddedMessage, setShowAddedMessage] = useState(false);
+
+  useEffect(() => {
+    if (!route.params?.title) {
+      fetch(`https://fakestoreapi.in/api/products/${id}`)
+        .then(res => res.json())
+        .then(datas => {
+          const data = datas.product
+          setProduct({
+            id: data.id,
+            title: data.title,
+            brand: data.brand || "Unknown Brand",
+            image: data.image,
+            price: data.price,
+            description: data.description,
+            model: data.model || "Standard",
+            color: data.color || "Default",
+            category: data.category,
+            discount: data.discount || 0,
+          });
+          setLoading(false);
+        })
+        .catch(error => {
+          console.log("Error fetching product:", error);
+          setLoading(false);
+        });
+    }
+  }, [id]);
+
+  const isInWishlist = useMemo(() => {
+    return wishlistItems.some(item => item.id === id);
+  }, [wishlistItems, id]);
+
+  const handleAddToCart = () => {
+    if (!isAuthenticated) {
+      openModal();
+      return;
+    }
+    try {
+      addToCart(product);
+      setShowAddedMessage(true);
+      setTimeout(() => setShowAddedMessage(false), 2000);
+    } catch (error) {
+      console.log('Error in adding to cart: ', error);
+    }
+  };
+
+  const handleBuyNow = () => {
+    console.log("buy")
+  }
+
+  const handleAddToWishlist = () => {
+    if (!isAuthenticated) {
+      openModal();
+      return;
+    }
+
+    if (isInWishlist) {
+      removeFromWishlist(id);
+    } else {
+      addToWishlist(product);
+    }
+  };
+
+  if (loading || !product) {
+    return (
+      <View style={[styles.screen, {justifyContent: 'center', alignItems: 'center'}]}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
   const {
     title,
     brand,
@@ -23,51 +109,38 @@ const ProductDetail = ({route, navigation}) => {
     color,
     category,
     discount,
-  } = route.params;
-  const {user, isAuthenticated} = UserStore();
-  const openModal = useModalStore(state => state.openModal);
-  const addToCart = useCartStore(state => state.addToCart);
-  const [showAddedMessage, setShowAddedMessage] = useState(false);
-
-  const handleAddToCart = () => {
-    if (!isAuthenticated) {
-      openModal();
-      return;
-    }
-
-    const productToAdd = {
-      id: route.params.id,
-      title,
-      brand,
-      image,
-      price,
-      category,
-      discount,
-    };
-
-    addToCart(productToAdd);
-    setShowAddedMessage(true);
-
-    setTimeout(() => {
-      setShowAddedMessage(false);
-    }, 2000);
-  };
-
-  const handleBuyNow = () => {
-    console.log('Buy now');
-  };
+  } = product;
 
   const handleGoBack = () => {
-    navigation.goBack();
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('MainApp', {screen: 'Home'}); 
+    }
   };
+  
 
   return (
     <View style={styles.screen}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#212121" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{model}</Text>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity onPress={handleGoBack}>
+            <Ionicons name="arrow-back" size={24} color="#212121" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{model}</Text>
+        </View>
+        <View style={[styles.headerLeft, {gap: 20}]}>
+          <Pressable>
+            <Ionicons name="share-social-outline" size={20} />
+          </Pressable>
+          <Pressable onPress={() => navigation.navigate('wishlist')}>
+            <Ionicons name="heart-outline" size={20} />
+          </Pressable>
+          <Pressable
+            onPress={() => navigation.navigate('MainApp', {screen: 'Bag'})}>
+            <Ionicons name="bag-outline" size={20} />
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView style={styles.container}>
@@ -106,13 +179,27 @@ const ProductDetail = ({route, navigation}) => {
       </ScrollView>
 
       <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.addToCartBtn} onPress={handleAddToCart}>
-          <Text style={styles.buttonText}>Add to Cart</Text>
+        <TouchableOpacity onPress={handleAddToWishlist}>
+          <Ionicons
+            name={isInWishlist ? 'heart' : 'heart-outline'}
+            style={{color: '#ff3e6c'}}
+            size={26}
+          />
         </TouchableOpacity>
         <TouchableOpacity style={styles.buyNowBtn} onPress={handleBuyNow}>
-          <Text style={styles.buttonText}>Buy Now</Text>
+          <MaterialCommunityIcons
+            name="cart-arrow-right"
+            style={{color: '#ff3e6c'}}
+            size={18}
+          />
+          <Text style={[styles.buttonText, {color: '#ff3e6c'}]}>Buy Now</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.addToCartBtn} onPress={handleAddToCart}>
+          <Ionicons name="bag-outline" style={{color: 'white'}} size={18} />
+          <Text style={styles.buttonText}>Add to Cart</Text>
         </TouchableOpacity>
       </View>
+
       {showAddedMessage && (
         <View style={styles.toast}>
           <Text style={styles.toastText}>Added to Cart Successfully</Text>
@@ -130,8 +217,9 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: '#fff',
-    paddingTop: 50,
+    paddingTop: 30,
     paddingBottom: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
@@ -139,8 +227,10 @@ const styles = StyleSheet.create({
     elevation: 2,
     zIndex: 10,
   },
-  backButton: {
-    marginRight: 12,
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   headerTitle: {
     fontSize: 18,
@@ -221,22 +311,28 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
     backgroundColor: '#fff',
+    alignItems: 'center',
   },
   addToCartBtn: {
     flex: 1,
-    backgroundColor: '#ff6f00',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: '#ff3e6c',
     paddingVertical: 12,
-    borderRadius: 6,
-    marginRight: 8,
-    alignItems: 'center',
+    borderRadius: 10,
+    marginLeft: 8,
   },
   buyNowBtn: {
     flex: 1,
-    backgroundColor: '#ff6f00',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    borderWidth: 1,
+    gap: 4,
+    borderColor: '#ff3e6c',
     paddingVertical: 12,
-    borderRadius: 6,
+    borderRadius: 10,
     marginLeft: 8,
-    alignItems: 'center',
   },
   buttonText: {
     color: '#fff',

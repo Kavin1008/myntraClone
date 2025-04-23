@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, FlatList, StyleSheet, Dimensions, ActivityIndicator } from "react-native";
+import { View, Text, Image, FlatList, StyleSheet, Dimensions, ActivityIndicator, Pressable } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { useNavigation } from "@react-navigation/native"; 
 
@@ -42,14 +42,15 @@ const ProductsListHorizontal = () => {
     };
 
     return (
-      <LinearGradient colors={["#FFDEE9", "#fff"]} style={[styles.card]} onTouchEnd={handleCardPress}>
+      <Pressable style={[styles.card]} onTouchEnd={handleCardPress}>
         <Image source={{ uri: image }} style={styles.image} />
-        <Text style={styles.brand}>{brand}</Text>
-        <Text style={styles.title}>{title}</Text>
+        <View style={styles.cardContent}>
+        <Text style={styles.title}>{title.slice(0,10)}...</Text>
         <Text style={styles.category}>{category}</Text>
         <Text style={styles.price}>${price}</Text>
         {discount > 0 && <Text style={styles.discount}>Discount: {discount}%</Text>}
-      </LinearGradient>
+        </View>
+      </Pressable>
     );
   };
 
@@ -63,7 +64,7 @@ const ProductsListHorizontal = () => {
 
   return (
     <View style={styles.container}>
-      <Text>Trending offers</Text>
+      <Text style={{fontSize:20, fontWeight:'bold'}}>Curated for you</Text>
       <FlatList
         data={products}
         horizontal
@@ -97,24 +98,25 @@ const styles = StyleSheet.create({
   },
   card: {
     width: 180,
-    height: 350,
+    maxHeight:250,
     borderRadius: 15,
-    padding: 10,
     marginRight: 15,
     alignItems: "center",
     justifyContent: "center",
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    borderColor:'black',
+    borderWidth:1
   },
   image: {
-    width: 120,
-    height: 140,
-    resizeMode: "contain",
+    width: "100%",
+    height: "100%",
+    resizeMode:'contain',
     marginBottom: 10,
   },
+  cardContent:{
+    position:'absolute',
+    bottom:10,
+    left:5,
+  }, 
   brand: {
     fontSize: 12,
     fontWeight: "bold",
@@ -122,7 +124,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 14,
     fontWeight: "600",
-    textAlign: "center",
   },
   category: {
     fontSize: 12,
@@ -131,12 +132,10 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 16,
     fontWeight: "600",
-    marginTop: 5,
   },
   discount: {
     fontSize: 12,
     color: "red",
-    marginTop: 5,
   },
   loader: {
     flex: 1,

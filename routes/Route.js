@@ -1,8 +1,8 @@
-import { StyleSheet } from 'react-native';
+import {StyleSheet} from 'react-native';
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {NavigationContainer} from '@react-navigation/native';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import HomeScreen from '../screens/products/HomeScreen';
 import OtpVerification from '../components/OtpVerification';
 import Wishlist from '../components/Wishlist';
@@ -14,34 +14,25 @@ import MarqueePage from '../components/Marquee';
 import AddUser from '../components/AddUser';
 import ProductList from '../components/ProductsList';
 import ProductDetail from '../components/ProductDetail';
-import CartScreen from '../components/Cart';
+import CartWrapperScreen from '../screens/Cart/CartScreen';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-
+import linking from './Linking';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-
 const ProfileStack = () => {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, animationTypeForReplace: 'push' }}>
+    <Stack.Navigator
+      screenOptions={{headerShown: false, animationTypeForReplace: 'push'}}>
       <Stack.Screen name="ProfileMain" component={Index} />
-      <Stack.Screen 
-          name="wishlist" 
-          options={{ headerShown: false }}
-        >
-          {() => (
-            <ProtectedRoute>
-              <Wishlist />
-            </ProtectedRoute>
-          )}
-        </Stack.Screen>
     </Stack.Navigator>
   );
-}
+};
 const HomeStack = () => {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, animationTypeForReplace: 'push' }}>
+    <Stack.Navigator
+      screenOptions={{headerShown: false, animationTypeForReplace: 'push'}}>
       <Stack.Screen name="HomeMain" component={HomeScreen} />
       <Stack.Screen name="Profile" component={ProfileStack} />
     </Stack.Navigator>
@@ -51,11 +42,11 @@ const HomeStack = () => {
 const TabNavigator = () => {
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
+      screenOptions={({route}) => ({
         headerShown: false,
-        tabBarActiveTintColor: '#ff6f00',
+        tabBarActiveTintColor: '#ff3e6c',
         tabBarInactiveTintColor: 'gray',
-        tabBarIcon: ({ focused, color, size }) => {
+        tabBarIcon: ({focused, color, size}) => {
           let iconName;
 
           if (route.name === 'Home') {
@@ -65,33 +56,38 @@ const TabNavigator = () => {
           } else if (route.name === 'Luxury') {
             iconName = focused ? 'diamond' : 'diamond-outline';
           } else if (route.name === 'Bag') {
-            iconName = focused ? 'cart' : 'cart-outline';
+            iconName = focused ? 'bag' : 'bag-outline';
           }
 
           return <Ionicons name={iconName} size={22} color={color} />;
         },
-      })}
-    >
+      })}>
       <Tab.Screen name="Home" component={HomeStack} />
       <Tab.Screen name="FWD" component={MarqueePage} />
       <Tab.Screen name="Luxury" component={ProductList} />
-      <Tab.Screen name="Bag" component={CartScreen} />
+      <Tab.Screen name="Bag" component={CartWrapperScreen} />
     </Tab.Navigator>
   );
 };
-
 
 const RootStack = createNativeStackNavigator();
 
 const Route = () => {
   return (
-    <NavigationContainer>
-      <RootStack.Navigator screenOptions={{ headerShown: false }}>
+    <NavigationContainer linking={linking}>
+      <RootStack.Navigator screenOptions={{headerShown: false}}>
         <RootStack.Screen name="Splash" component={Splash} />
         <RootStack.Screen name="MainApp" component={TabNavigator} />
         <RootStack.Screen name="OtpVerification" component={OtpVerification} />
         <RootStack.Screen name="adduser" component={AddUser} />
         <RootStack.Screen name="ProductDetail" component={ProductDetail} />
+        <RootStack.Screen name="wishlist" options={{headerShown: false}}>
+        {() => (
+          <ProtectedRoute>
+            <Wishlist />
+          </ProtectedRoute>
+        )}
+      </RootStack.Screen>      
       </RootStack.Navigator>
       <GlobalModal />
     </NavigationContainer>

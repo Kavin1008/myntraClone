@@ -19,8 +19,6 @@ const ProtectedRoute = ({ children }) => {
 
   useEffect(() => {
 
-    console.log(route)
-
     if (!isAuthenticated) {
       setRequestedRoute(route.name, route.params);
       openModal(); 

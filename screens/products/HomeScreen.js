@@ -20,7 +20,12 @@ import UserStore, {useAuthListener} from '../../zustand/UserStore';
 
 import auth from '@react-native-firebase/auth';
 import ProductList from '../../components/ProductsList';
-import { FlatList } from 'react-native-gesture-handler';
+import {FlatList} from 'react-native-gesture-handler';
+import useCartStore from '../../zustand/CartStore';
+import useRouteStore from '../../zustand/RouteStore';
+import useModalStore from '../../zustand/ModalStore';
+import useLoadingStore from '../../zustand/LoadingStore';
+import { ActivityIndicator } from 'react-native-paper';
 
 const banners = Array.from({length: 3}, (_, i) => ({id: i + 1, image: img}));
 const chips = ['All', 'Men', 'Women'].map((label, i) => ({
@@ -39,9 +44,12 @@ const cards = ['Fashion', 'Beauty', 'Home', 'Footwear', 'Accessories'].map(
 const HomeScreen = ({navigation}) => {
   const [isAddLocationModalOpen, setIsAddLocationModalOpen] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
+  const { isLoading, setLoading } = useLoadingStore();
   useAuthListener();
 
   const setUser = UserStore(state => state.setUser);
+  const user = UserStore(state => state.user);
+  const {openModal} = useModalStore();
 
   const toggleLocationModal = useCallback(() => {
     setIsAddLocationModalOpen(prev => !prev);
@@ -53,6 +61,12 @@ const HomeScreen = ({navigation}) => {
         break;
 
       case 1:
+        if (!user) {
+          useRouteStore.getState().setRequestedRoute('wishlist', {});
+          openModal();
+        } else {
+          navigation.navigate('wishlist');
+        }
         break;
 
       case 2:
@@ -65,8 +79,10 @@ const HomeScreen = ({navigation}) => {
   };
 
   const handleSignOut = () => {
+    const clearCart = useCartStore.getState().clearCart;
     setUser(null);
     auth().signOut();
+    clearCart();
   };
 
   return (
@@ -130,25 +146,32 @@ const HomeScreen = ({navigation}) => {
         <SearchBar navigation={navigation} />
       </View>
 
-      <FlatList
-        ListHeaderComponent={
-          <>
-            <ChipBar chips={chips} />
-            <CardSlider cards={cards} />
-            <Carousel banners={banners} />
-            <ProductsListHorizontal />
-          </>
-        }
-        ListFooterComponent={<ProductList />}
-        data={[]} 
-        keyExtractor={(_, index) => index.toString()}
-      />
+      {isLoading ? (
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <ActivityIndicator size="large" color="#ff3e6c" />
+        </View>
+      ) : (
+        <FlatList
+          ListHeaderComponent={
+            <View>
+              {/* <ChipBar chips={chips} /> */}
+              <CardSlider cards={cards} />
+              <Carousel banners={banners} />
+              <ProductsListHorizontal />
+            </View>
+          }
+          ListFooterComponent={<ProductList />}
+          data={[]}
+          keyExtractor={(_, index) => index.toString()}
+          style={{marginTop: 140}}
+        />
+      )}
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: '#fff', marginTop: 15},
+  container: {flex: 1, backgroundColor: '#fff'},
   staticHeader: {
     position: 'absolute',
     top: 0,

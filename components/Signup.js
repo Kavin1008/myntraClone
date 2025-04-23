@@ -68,8 +68,8 @@ export default function Signup({setSignInPopUp, offerBanner}) {
 
       <View style={styles.body}>
         <Text style={styles.label}>
-          <Text style={{fontWeight: 'bold'}}>Login</Text>{' '}
-          <Text style={{fontSize: 14}}> or </Text>{' '}
+          <Text style={{fontWeight: 'bold'}}>Login</Text>
+          <Text style={{fontSize: 14}}> or </Text>
           <Text style={{fontWeight: 'bold'}}>Signup</Text>
         </Text>
         <TextInput
@@ -84,7 +84,8 @@ export default function Signup({setSignInPopUp, offerBanner}) {
         <Text style={styles.description}>
           By continuing, you agree that you are above 18 years of age, and you
           agree to Myntra's
-          <Text style={styles.linkText}> Terms of Use</Text> and{' '}
+          <Text style={styles.linkText}> Terms of Use</Text> 
+          <Text> and </Text> 
           <Text style={styles.linkText}>Privacy Policy</Text>
         </Text>
         <TouchableOpacity

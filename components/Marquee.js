@@ -32,7 +32,6 @@ const Item = ({imgUrl, index}) => {
         width: _itemWidth,
         height: _itemHeight,
       }}>
-      {console.log(imgUrl)}
       <Image source={{uri: imgUrl}} style={{flex: 1, borderRadius: 16}} />
     </View>
   );

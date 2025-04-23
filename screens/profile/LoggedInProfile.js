@@ -43,7 +43,6 @@ const LoggedInProfile = () => {
             horizontal
             contentContainerStyle={[styles.profilesBar, {minWidth: width}]}>
             <ProfileIcon name={user.name} activeStyle={styles.activeProfile} />
-            <ProfileIcon name={user.name} />
           </ScrollView>
         </View>
         <View style={styles.chipsContainer}>
@@ -57,7 +56,7 @@ const LoggedInProfile = () => {
                 size={20}
               />
             </View>
-            <View style={styles.chip}>
+            <Pressable style={styles.chip} onPress={() => navigation.navigate('wishlist')}>
               <Feather name="heart" style={styles.lightColor} size={20} />
               <Text style={{width: '60%', fontWeight: 'bold'}}>Wishlist</Text>
               <Feather
@@ -65,7 +64,7 @@ const LoggedInProfile = () => {
                 style={styles.lightColor}
                 size={20}
               />
-            </View>
+            </Pressable>
           </View>
           <View style={styles.chipHolder}>
             <Pressable style={styles.chip} onPress={() => navigation.navigate('Bag')}>
