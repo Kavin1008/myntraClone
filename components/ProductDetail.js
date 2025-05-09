@@ -15,6 +15,8 @@ import useCartStore from '../zustand/CartStore';
 import UserStore from '../zustand/UserStore';
 import useWishlistStore from '../zustand/WishlistStore';
 import {Screen} from 'react-native-screens';
+import { BagIcon } from './Icons';
+import CircularLoader from './Loader';
 
 const ProductDetail = ({route, navigation}) => {
   const {id} = route.params;
@@ -54,12 +56,11 @@ const ProductDetail = ({route, navigation}) => {
           setLoading(false);
         });
     }
-  }, [id]);
+  }, []);
 
   const isInWishlist = useMemo(() => {
     return wishlistItems.some(item => item.id === id);
   }, [wishlistItems, id]);
-
   const handleAddToCart = () => {
     if (!isAuthenticated) {
       openModal();
@@ -94,7 +95,7 @@ const ProductDetail = ({route, navigation}) => {
   if (loading || !product) {
     return (
       <View style={[styles.screen, {justifyContent: 'center', alignItems: 'center'}]}>
-        <Text>Loading...</Text>
+        <CircularLoader />
       </View>
     );
   }
@@ -136,10 +137,11 @@ const ProductDetail = ({route, navigation}) => {
           <Pressable onPress={() => navigation.navigate('wishlist')}>
             <Ionicons name="heart-outline" size={20} />
           </Pressable>
-          <Pressable
+          {/* <Pressable
             onPress={() => navigation.navigate('MainApp', {screen: 'Bag'})}>
             <Ionicons name="bag-outline" size={20} />
-          </Pressable>
+          </Pressable> */}
+          <BagIcon navigator={navigation}/>
         </View>
       </View>
 

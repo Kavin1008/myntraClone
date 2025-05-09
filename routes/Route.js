@@ -17,6 +17,10 @@ import ProductDetail from '../components/ProductDetail';
 import CartWrapperScreen from '../screens/Cart/CartScreen';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import linking from './Linking';
+import ForegroundServiceExample from '../components/ForegroundServiceExample';
+import LocationTracker from '../components/LocationTracker';
+import SearchScreen from '../screens/products/SearchScreen';
+import { BagIcon } from '../components/Icons';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -56,7 +60,15 @@ const TabNavigator = () => {
           } else if (route.name === 'Luxury') {
             iconName = focused ? 'diamond' : 'diamond-outline';
           } else if (route.name === 'Bag') {
-            iconName = focused ? 'bag' : 'bag-outline';
+            return (
+              <>
+              {focused ?
+                <BagIcon size={22} name={"bag"} color={color}/>
+                :
+                <BagIcon size={22}/>
+              }
+              </>
+            )
           }
 
           return <Ionicons name={iconName} size={22} color={color} />;
@@ -64,7 +76,7 @@ const TabNavigator = () => {
       })}>
       <Tab.Screen name="Home" component={HomeStack} />
       <Tab.Screen name="FWD" component={MarqueePage} />
-      <Tab.Screen name="Luxury" component={ProductList} />
+      <Tab.Screen name="Luxury" component={LocationTracker} />
       <Tab.Screen name="Bag" component={CartWrapperScreen} />
     </Tab.Navigator>
   );
@@ -81,6 +93,7 @@ const Route = () => {
         <RootStack.Screen name="OtpVerification" component={OtpVerification} />
         <RootStack.Screen name="adduser" component={AddUser} />
         <RootStack.Screen name="ProductDetail" component={ProductDetail} />
+        <RootStack.Screen name="SearchScreen" component={SearchScreen} />
         <RootStack.Screen name="wishlist" options={{headerShown: false}}>
         {() => (
           <ProtectedRoute>

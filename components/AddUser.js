@@ -30,7 +30,6 @@ const AddUser = ({route}) => {
 
   const user = UserStore(state => state.user);
   const setUser = UserStore(state => state.setUser)
-  console.log(user);
   const db = getFirestore();
 
   const {uid, phoneNumber} = route.params
@@ -42,7 +41,7 @@ const AddUser = ({route}) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [name, setName] = useState('');
 
-  const handleGenderActive = gender => {
+  const handleGenderActive  = gender => {
     if (gender === 'male') {
       setIsMaleActive(true);
       setIsFemaleActive(false);

@@ -11,7 +11,6 @@ const CartWrapperScreen = () => {
   const navigation = useNavigation();
   const user = UserStore(state => state.user);
   const {openModal} = useModalStore();
-
   return (
     <View style={{flex: 1}}>
       <View style={styles.headerContainer}>

@@ -13,7 +13,6 @@ import { useNavigation } from '@react-navigation/native';
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -25,16 +24,13 @@ const ProductList = () => {
         } else {
           console.warn("Unexpected API response", response);
         }
-        setLoading(false);
       })
       .catch(error => {
         console.error("Error fetching products: ", error);
-        setLoading(false);
       });
   }, []);
 
   const handleCardPress = (item) => {
-    console.log(item.id)
     navigation.navigate("ProductDetail", {
       id: item.id,
       title: item.title,
@@ -42,7 +38,7 @@ const ProductList = () => {
       image: item.image,
       price: item.price,
       category: item.category,
-      discount: item.discount,
+      discount: item.discount || 0,
       description: item.description || "Detailed description goes here",
       model: item.model || "Model XYZ",
       color: item.color || "Silver",
@@ -59,13 +55,7 @@ const ProductList = () => {
     </TouchableOpacity>
   );
 
-  if (loading) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color="#000" />
-      </View>
-    );
-  }
+
 
   return (
     <FlatList

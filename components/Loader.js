@@ -1,13 +1,13 @@
 import { View, ActivityIndicator, StyleSheet } from "react-native";
 
-const CircularLoader = ({ size = "large", color = "#3498db" }) => {
+const CircularLoader = ({ size = "large", color = "#ff3e6c" }) => {
   return (
     <View style={styles.container}>
       <ActivityIndicator size={size} color={color} />
     </View>
   );
 };
-
+                                                                                                     
 const styles = StyleSheet.create({
   container: {
     flex: 1,

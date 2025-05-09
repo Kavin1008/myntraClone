@@ -5,28 +5,38 @@ import {
   TextInput,
   StyleSheet,
   ActivityIndicator,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import Ionicon from 'react-native-vector-icons/Ionicons';
-import UserStore, { useAuthListener } from '../zustand/UserStore';
+import UserStore from '../zustand/UserStore';
 import {getFirestore, getDoc, collection} from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import useWishlistStore from '../zustand/WishlistStore';
 
 export default function OtpVerification() {
-  const [code, setCode] = useState('');
+  const [digits, setDigits] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [message, setMessage] = useState('');
-
-  const otpInputRef = useRef(null);
+  
+  const inputRefs = useRef([]);
   const setUser = UserStore(state => state.setUser);
   const navigation = useNavigation();
   const route = useRoute();
   const {confirmation, phoneNumber} = route.params;
+  const {loadWishlist} = useWishlistStore();
 
   const db = getFirestore();
-  
-  const confirmCode = async inputCode => {
+
+  useEffect(() => {
+    if (inputRefs.current[0]) {
+      inputRefs.current[0].focus();
+    }
+  }, []);
+
+  const confirmCode = async (otp) => {
     if (!confirmation) {
       setError(true);
       setMessage('OTP expired or cancelled. Please try logging in again.');
@@ -35,7 +45,7 @@ export default function OtpVerification() {
 
     setLoading(true);
     try {
-      const result = await confirmation.confirm(inputCode);
+      const result = await confirmation.confirm(otp);
       await new Promise(resolve => {
         const unsubscribe = auth().onAuthStateChanged(user => {
           if (user) {
@@ -50,6 +60,7 @@ export default function OtpVerification() {
       const userSnap = await userRef.get();
       
       if (userSnap.exists) {
+        loadWishlist();
         navigation.goBack();               
       } else {
         navigation.navigate('adduser', {
@@ -66,13 +77,29 @@ export default function OtpVerification() {
     setLoading(false);
   };
 
-  const handleTextChange = text => {
-    const cleaned = text.replace(/[^0-9]/g, '').slice(0, 6);
-    setCode(cleaned);
+  const handleDigitChange = (text, index) => {
+    // Only allow single digit input
+    const newDigits = [...digits];
+    newDigits[index] = text.replace(/[^0-9]/g, '').slice(0, 1);
+    setDigits(newDigits);
 
-    if (cleaned.length === 6) {
-      otpInputRef.current.blur();
-      confirmCode(cleaned);
+    // If a digit was entered, move to next input
+    if (text && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+
+    // If last digit was entered, submit
+    if (text && index === 5) {
+      const otp = newDigits.join('');
+      Keyboard.dismiss();
+      confirmCode(otp);
+    }
+  };
+
+  const handleKeyPress = (e, index) => {
+    // Handle backspace to move to previous input
+    if (e.nativeEvent.key === 'Backspace' && !digits[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
     }
   };
 
@@ -81,31 +108,41 @@ export default function OtpVerification() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Ionicon name="arrow-back-sharp" size={24} onPress={handleCancel} />
-        <Text style={{fontSize: 18, fontWeight: 'bold'}}>Enter OTP</Text>
-      </View>
-      <View style={styles.body}>
-        <Text style={styles.title}>Verify with OTP</Text>
-        <Text style={styles.subtitle}>Sent via SMS to {phoneNumber}</Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Ionicon name="arrow-back-sharp" size={24} onPress={handleCancel} />
+          <Text style={{fontSize: 18, fontWeight: 'bold'}}>Enter OTP</Text>
+        </View>
+        <View style={styles.body}>
+          <Text style={styles.title}>Verify with OTP</Text>
+          <Text style={styles.subtitle}>Sent via SMS to {phoneNumber}</Text>
 
-        <TextInput
-          ref={otpInputRef}
-          placeholder="123456"
-          value={code}
-          onChangeText={handleTextChange}
-          keyboardType="number-pad"
-          style={[styles.input, error && styles.inputError]}
-          maxLength={6}
-        />
-        {error ? <Text style={styles.message}>{message}</Text> : null}
+          <View style={styles.otpContainer}>
+            {digits.map((digit, index) => (
+              <TextInput
+                key={index}
+                ref={ref => (inputRefs.current[index] = ref)}
+                value={digit}
+                onChangeText={(text) => handleDigitChange(text, index)}
+                onKeyPress={(e) => handleKeyPress(e, index)}
+                keyboardType="number-pad"
+                style={[styles.otpInput, error && styles.inputError]}
+                maxLength={1}
+                textAlign="center"
+                selectTextOnFocus
+              />
+            ))}
+          </View>
 
-        {loading && (
-          <ActivityIndicator size="large" color="blue" style={styles.loader} />
-        )}
+          {error && <Text style={styles.message}>{message}</Text>}
+
+          {loading && (
+            <ActivityIndicator size="large" color="blue" style={styles.loader} />
+          )}
+        </View>
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -124,6 +161,7 @@ const styles = StyleSheet.create({
   },
   body: {
     paddingHorizontal: 30,
+    width: '100%',
   },
   title: {
     fontSize: 20,
@@ -135,13 +173,18 @@ const styles = StyleSheet.create({
     color: 'gray',
     marginBottom: 20,
   },
-  input: {
+  otpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 20,
+  },
+  otpInput: {
+    width: 45,
     height: 50,
-    width: '80%',
     borderColor: '#ccc',
     borderWidth: 1,
     borderRadius: 10,
-    textAlign: 'center',
     fontSize: 18,
   },
   message: {
@@ -151,5 +194,8 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: 'red',
+  },
+  loader: {
+    marginTop: 20,
   },
 });

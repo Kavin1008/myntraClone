@@ -8,7 +8,6 @@ import LoggedInProfile from './LoggedInProfile'
 const Index = ({navigation}) => {
     useAuthListener()
     const user = UserStore((state) => state.user)
-    console.log(user)
     const handleBack = () => {
         navigation.goBack();
     }
@@ -33,7 +32,6 @@ const styles = StyleSheet.create({
     androidSafeArea: {
         flex: 1,
         backgroundColor: "white",
-        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
         width: "100%"
     },
     profileHeader: {

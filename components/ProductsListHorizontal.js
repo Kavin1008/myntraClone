@@ -5,25 +5,9 @@ import { useNavigation } from "@react-navigation/native";
 
 const { width } = Dimensions.get("window");
 
-const ProductsListHorizontal = () => {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const navigation = useNavigation(); 
+const ProductsListHorizontal = ({products}) => {
 
-  useEffect(() => {
-    fetch("https://fakestoreapi.in/api/products?limit=5")
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.status === "SUCCESS") {
-          setProducts(res.products);
-        }
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching products:", error);
-        setLoading(false);
-      });
-  }, []);
+  const navigation = useNavigation(); 
 
   const ProductCard = ({ title, brand, image, price, category, discount, id }) => {
     const handleCardPress = () => {
@@ -53,14 +37,6 @@ const ProductsListHorizontal = () => {
       </Pressable>
     );
   };
-
-  if (loading) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color="#000" />
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>

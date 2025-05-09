@@ -53,7 +53,7 @@ const CartScreen = () => {
       image: item.image,
       price: item.price,
       category: item.category,
-      discount: item.discount,
+      discount: item.discount || 0,
       description: item.description || 'Detailed description goes here',
       model: item.model || 'Model XYZ',
       color: item.color || 'Silver',

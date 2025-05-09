@@ -14,6 +14,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useNavigation} from '@react-navigation/native';
 import useWishlistStore from '../zustand/WishlistStore';
 import useCartStore from '../zustand/CartStore';
+import { BagIcon } from './Icons';
 
 const screenWidth = Dimensions.get('window').width;
 const cardWidth = (screenWidth - 48) / 2;
@@ -59,7 +60,7 @@ const Wishlist = () => {
       </Pressable>
       <View style={styles.cardContent}>
         <Image source={{uri: item.image}} style={styles.image} />
-        <Text style={styles.title}>{item.title}</Text>
+        {/* <Text style={styles.title}>{item.title}</Text> */}
         <Text style={styles.brand}>{item.brand}</Text>
         <Text style={styles.price}>₹{item.price}</Text>
       </View>
@@ -80,9 +81,10 @@ const Wishlist = () => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Wishlist</Text>
         </View>
-        <TouchableOpacity onPress={handleOpenBag}>
+        {/* <TouchableOpacity onPress={handleOpenBag}>
           <Ionicons name="bag-outline" size={24} color="#000" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
+        <BagIcon navigator={navigation} size={24}/>
       </View>
 
       <FlatList

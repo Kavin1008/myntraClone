@@ -1,11 +1,12 @@
-import {useState, useCallback} from 'react';
+import {useState, useCallback, useEffect} from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   SafeAreaView,
   TouchableOpacity,
+  Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -24,10 +25,7 @@ import {FlatList} from 'react-native-gesture-handler';
 import useCartStore from '../../zustand/CartStore';
 import useRouteStore from '../../zustand/RouteStore';
 import useModalStore from '../../zustand/ModalStore';
-import useLoadingStore from '../../zustand/LoadingStore';
-import { ActivityIndicator } from 'react-native-paper';
 
-const banners = Array.from({length: 3}, (_, i) => ({id: i + 1, image: img}));
 const chips = ['All', 'Men', 'Women'].map((label, i) => ({
   id: i + 1,
   image: img,
@@ -44,10 +42,13 @@ const cards = ['Fashion', 'Beauty', 'Home', 'Footwear', 'Accessories'].map(
 const HomeScreen = ({navigation}) => {
   const [isAddLocationModalOpen, setIsAddLocationModalOpen] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
-  const { isLoading, setLoading } = useLoadingStore();
+  const [banners, setBanners] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   useAuthListener();
 
-  const setUser = UserStore(state => state.setUser);
+  // const setUser = UserStore(state => state.setUser);
+  const [products, setProducts] = useState([]);
   const user = UserStore(state => state.user);
   const {openModal} = useModalStore();
 
@@ -55,10 +56,41 @@ const HomeScreen = ({navigation}) => {
     setIsAddLocationModalOpen(prev => !prev);
   }, []);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+  
+        const [productRes, bannerRes] = await Promise.all([
+          fetch("https://fakestoreapi.in/api/products?limit=5"),
+          fetch("https://fakestoreapi.in/api/products?limit=5")
+        ]);
+  
+        const productData = await productRes.json();
+        const bannerData = await bannerRes.json();
+  
+        if (productData.status === "SUCCESS") {
+          setProducts(productData.products);
+        }
+  
+        if (bannerData.status === "SUCCESS") {
+          setBanners(bannerData.products);
+        }
+  
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchData();
+  }, []);
+
   const handleProfileNavigate = i => {
     switch (i) {
       case 0:
-        break;
+          break;
 
       case 1:
         if (!user) {
@@ -78,12 +110,11 @@ const HomeScreen = ({navigation}) => {
     }
   };
 
-  const handleSignOut = () => {
-    const clearCart = useCartStore.getState().clearCart;
-    setUser(null);
-    auth().signOut();
-    clearCart();
-  };
+  if (loading) {
+    return (
+      <ActivityIndicator size="large" color="#ff3f6c" style={{marginTop: 30}} />
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -92,7 +123,9 @@ const HomeScreen = ({navigation}) => {
         onLayout={event => setHeaderHeight(event.nativeEvent.layout.height)}>
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <TouchableOpacity
+            <SearchBar navigation={navigation} />
+
+            {/* <TouchableOpacity
               style={styles.logoContainer}
               onPress={handleSignOut}>
               <Text style={styles.logo}>Myntra</Text>
@@ -115,7 +148,7 @@ const HomeScreen = ({navigation}) => {
                   />
                 </View>
               </View>
-            </View>
+            </View> */}
           </View>
           <View style={styles.headerIcons}>
             {[
@@ -137,35 +170,28 @@ const HomeScreen = ({navigation}) => {
           style={styles.locationIndicator}
           onPress={toggleLocationModal}>
           <Ionicons name="location" size={16} />
-          <Text>Add Delivery Location</Text>
+          <Text>{user?.name && user?.currentAddress ? `Deliver to ${user?.name} - ${user?.currentAddress?.landmark}` :'Add Delivery Location'}</Text>
         </TouchableOpacity>
         <AddLocationModal
           isAddLocationModalOpen={isAddLocationModalOpen}
           setIsAddLocationModalOpen={setIsAddLocationModalOpen}
         />
-        <SearchBar navigation={navigation} />
       </View>
 
-      {isLoading ? (
-        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-          <ActivityIndicator size="large" color="#ff3e6c" />
-        </View>
-      ) : (
-        <FlatList
-          ListHeaderComponent={
-            <View>
-              {/* <ChipBar chips={chips} /> */}
-              <CardSlider cards={cards} />
-              <Carousel banners={banners} />
-              <ProductsListHorizontal />
-            </View>
-          }
-          ListFooterComponent={<ProductList />}
-          data={[]}
-          keyExtractor={(_, index) => index.toString()}
-          style={{marginTop: 140}}
-        />
-      )}
+      <FlatList
+        ListHeaderComponent={
+          <View>
+            {/* <ChipBar chips={chips} />
+            <CardSlider cards={cards} /> */}
+            <Carousel banners={banners} />
+            <ProductsListHorizontal products={products}/>
+          </View>
+        }
+        ListFooterComponent={<ProductList />}
+        data={[]}
+        keyExtractor={(_, index) => index.toString()}
+        style={{marginTop: headerHeight}}
+      />
     </SafeAreaView>
   );
 };
@@ -177,12 +203,14 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#fff',
+    backgroundColor: '#fff8e7',
     zIndex: 10,
     elevation: 5,
     paddingBottom: 10,
   },
   header: {
+    width: Dimensions.width,
+    height: 80,
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingTop: 20,
@@ -190,25 +218,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     alignItems: 'center',
   },
-  headerLeft: {flexDirection: 'row', gap: 10},
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'beige',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-    borderColor: 'gold',
-    borderWidth: 1,
-  },
-  logo: {fontSize: 15, fontWeight: 'bold', color: 'black'},
-  memberStatus: {flexDirection: 'row', alignItems: 'center', gap: 5},
-  selectText: {fontWeight: 'bold', fontSize: 10},
-  insider: {flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: -5},
-  insiderText: {fontWeight: 'bold', color: '#996600'},
-  crownIcon: {color: '#996600'},
-  arrowDownIcon: {color: '#ff5050'},
-  arrowRightIcon: {color: '#996600'},
+  headerLeft: {flexDirection: 'row', gap: 10, width: '70%'},
+  // logoContainer: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   backgroundColor: 'beige',
+  //   paddingVertical: 5,
+  //   borderRadius: 5,
+  //   borderColor: 'gold',
+  //   borderWidth: 1,
+  // },
+  // logo: {fontSize: 15, fontWeight: 'bold', color: 'black'},
+  // memberStatus: {flexDirection: 'row', alignItems: 'center', gap: 5},
+  // selectText: {fontWeight: 'bold', fontSize: 10},
+  // insider: {flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: -5},
+  // insiderText: {fontWeight: 'bold', color: '#996600'},
+  // crownIcon: {color: '#996600'},
+  // arrowDownIcon: {color: '#ff5050'},
+  // arrowRightIcon: {color: '#996600'},
   headerIcons: {flexDirection: 'row'},
   iconSpacing: {marginLeft: 15},
   locationIndicator: {

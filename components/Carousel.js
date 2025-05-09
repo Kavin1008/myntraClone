@@ -6,25 +6,10 @@ const ITEM_WIDTH = width * 0.75;
 const SIDE_GAP = (width - ITEM_WIDTH) / 2;
 const IMAGE_MARGIN = 10;
 
-const Carousel = () => {
+const Carousel = ({banners}) => {
   const scrollViewRef = useRef(null);
   const scrollX = useRef(new Animated.Value(0)).current;
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [banners, setBanners] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("https://fakestoreapi.in/api/products?limit=5")
-      .then(res => res.json())
-      .then(data => {
-        setBanners(data.products);
-        setLoading(false);
-      })
-      .catch(error => {
-        console.error("Error fetching banners:", error);
-        setLoading(false);
-      });
-  }, []);
 
   useEffect(() => {
     if (banners.length === 0) return;
@@ -40,10 +25,6 @@ const Carousel = () => {
 
     return () => clearInterval(interval);
   }, [currentIndex, banners]);
-
-  if (loading) {
-    return <ActivityIndicator size="large" color="#ff3f6c" style={{ marginTop: 30 }} />;
-  }
 
   return (
     <View style={styles.carouselContainer}>

@@ -10,7 +10,10 @@ import {
 import React from 'react';
 import UserStore from '../../zustand/UserStore';
 import Feather from 'react-native-vector-icons/Feather';
-import { useNavigation } from "@react-navigation/native";
+import {useNavigation} from '@react-navigation/native';
+import useCartStore from '../../zustand/CartStore';
+import auth from '@react-native-firebase/auth';
+import useWishlistStore from '../../zustand/WishlistStore';
 
 const ProfileIcon = ({name, activeStyle}) => {
   return (
@@ -30,7 +33,15 @@ const ProfileIcon = ({name, activeStyle}) => {
 const LoggedInProfile = () => {
   const {width, height} = useWindowDimensions();
   const user = UserStore(state => state.user);
-  const navigation = useNavigation()
+  const navigation = useNavigation();
+
+  const handleSignOut = () => {
+    const clearCart = useCartStore.getState().clearCart;
+    const clearWishlist = useWishlistStore.getState().clearWishlist;
+    auth().signOut();
+    clearCart();
+    clearWishlist();
+  };
 
   return (
     <View style={{flex: 1}}>
@@ -56,7 +67,9 @@ const LoggedInProfile = () => {
                 size={20}
               />
             </View>
-            <Pressable style={styles.chip} onPress={() => navigation.navigate('wishlist')}>
+            <Pressable
+              style={styles.chip}
+              onPress={() => navigation.navigate('wishlist')}>
               <Feather name="heart" style={styles.lightColor} size={20} />
               <Text style={{width: '60%', fontWeight: 'bold'}}>Wishlist</Text>
               <Feather
@@ -67,9 +80,15 @@ const LoggedInProfile = () => {
             </Pressable>
           </View>
           <View style={styles.chipHolder}>
-            <Pressable style={styles.chip} onPress={() => navigation.navigate('Bag')}>
-              <Feather name="shopping-cart" style={styles.lightColor} size={20} />
-              <Text style={{width: '60%', fontWeight: 'bold'}}>Cart</Text>
+            <Pressable
+              style={styles.chip}
+              onPress={() => navigation.navigate('Bag')}>
+              <Feather
+                name="shopping-bag"
+                style={styles.lightColor}
+                size={20}
+              />
+              <Text style={{width: '60%', fontWeight: 'bold'}}>Bag</Text>
               <Feather
                 name="chevron-right"
                 style={styles.lightColor}
@@ -86,6 +105,12 @@ const LoggedInProfile = () => {
               />
             </View>
           </View>
+          <Pressable
+            onPress={handleSignOut}
+            style={[styles.chip, {height: 37, width: '100%', marginTop:20, justifyContent:'center', borderColor:'red'}]}>
+           
+            <Text style={{fontWeight: 'bold', color:'red'}}>Logout</Text>
+          </Pressable>
         </View>
       </ScrollView>
     </View>
